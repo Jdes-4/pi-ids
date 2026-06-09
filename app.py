@@ -10,13 +10,7 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = SECRET_KEY
 sniffer_thread = None
 
-init_db()
-<<<<<<< HEAD
- 
-=======
-
-
->>>>>>> a344e38889827aa6b1c31b608added0f43f463fe
+init_db() 
 def get_db():
     if "db" not in g:
         g.db = get_db_connection()
