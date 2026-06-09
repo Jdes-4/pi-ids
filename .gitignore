@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+<<<<<<< HEAD
+*.pyc
+*.sqlite
+*.sqlite-journal
+.DS_Store
+.env
+=======
+*.sqlite
+*.sqlite-journal
+.DS_Store
+.env
+>>>>>>> a344e38889827aa6b1c31b608added0f43f463fe

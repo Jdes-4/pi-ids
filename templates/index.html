@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IDS Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>IDS Dashboard</h1>
+        <p>Lightweight Raspberry Pi intrusion detection</p>
+      </div>
+      <div class="actions">
+      <a class="button secondary" href="/reset">Reset</a>
+      <a class="button secondary" href="/logout">Logout</a>
+      </div>
+    </header>
+    <main class="page-dashboard">
+      <section class="summary-grid">
+        <div class="card">
+          <h2>Total packets</h2>
+          <p id="total-packets">—</p>
+        </div>
+        <div class="card">
+          <h2>Total alerts</h2>
+          <p id="total-alerts">—</p>
+        </div>
+        <div class="card">
+          <h2>Latest alert</h2>
+          <p id="latest-alert">No alerts yet</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Recent alerts</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Severity</th>
+              <th>Reason</th>
+              <th>Incident</th>
+            </tr>
+          </thead>
+          <tbody id="alerts-table"></tbody>
+        </table>
+      </section>
+    <div id="incident-modal" class="modal hidden">
+  <div class="modal-content">
+    <h2 id="incident-title">Incident details</h2>
+
+    <div class="incident-summary">
+      <p id="incident-friendly-summary"></p>
+    </div>
+
+    <h3>What happened?</h3>
+    <p id="incident-explanation"></p>
+
+    <button
+      id="toggle-details"
+      class="button secondary"
+      type="button"
+      >
+      Show technical details
+    </button>
+    <div id ="technical-details" class="hidden">
+      <h3>Technical details</h3>
+      <p><strong>Time:</strong> <span id="incident-time"></span></p>
+      <p><strong>Severity:</strong> <span id="incident-severity"></span></p>
+      <p><strong>Source:</strong> <span id="incident-src"></span></p>
+      <p><strong>Target:</strong> <span id="incident-dst"></span></p>
+      <p><strong>Duration:</strong> <span id="incident-window"></span></p>
+      <p><strong>Total triggers:</strong> <span id="incident-count"></span></p>
+      <p><strong>Ports involved:</strong> <span id="incident-ports"></span></p>
+
+    </div>
+    
+    <button class="button secondary" onclick="closeIncident()">Close</button>
+  </div>
+</div>
+    </main>
+    <script src="/static/js/dashboard.js"></script>
+  </body>
+</html>
