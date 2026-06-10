@@ -48,11 +48,15 @@ sudo ip link set wlan0 up || true
 
 echo "[+] Configuring static IP..."
 
+sudo sed -i '/# BEGIN PI IDS AP CONFIG/,/# END PI IDS AP CONFIG/d' /etc/dhcpcd.conf
+
 sudo tee -a /etc/dhcpcd.conf > /dev/null <<EOF
 
+# BEGIN PI IDS AP CONFIG
 interface $AP_IFACE
 static ip_address=$AP_IP/24
 nohook wpa_supplicant
+# END PI IDS AP CONFIG
 EOF
 
 echo "[+] Configuring hostapd..."
@@ -78,7 +82,9 @@ sudo sed -i 's|#DAEMON_CONF=""|DAEMON_CONF="/etc/hostapd/hostapd.conf"|' /etc/de
 
 echo "[+] Configuring dnsmasq..."
 
-sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.backup 2>/dev/null || true
+if [ -f /etc/dnsmasq.conf ] && [ ! -f /etc/dnsmasq.conf.backup ]; then
+    sudo cp /etc/dnsmasq.conf /etc/dnsmasq.conf.backup
+fi
 
 sudo tee /etc/dnsmasq.conf > /dev/null <<EOF
 interface=$AP_IFACE
@@ -115,6 +121,20 @@ fi
 
 echo "[+] Configuring NAT..."
 
+sudo iptables -t nat -D POSTROUTING -o $WAN_IFACE -j MASQUERADE 2>/dev/null || true
+
+sudo iptables -D FORWARD \
+    -i $WAN_IFACE \
+    -o $AP_IFACE \
+    -m state \
+    --state RELATED,ESTABLISHED \
+    -j ACCEPT 2>/dev/null || true
+
+sudo iptables -D FORWARD \
+    -i $AP_IFACE \
+    -o $WAN_IFACE \
+    -j ACCEPT 2>/dev/null || true
+
 sudo iptables -t nat -A POSTROUTING -o $WAN_IFACE -j MASQUERADE
 
 sudo iptables -A FORWARD \
@@ -136,6 +156,9 @@ echo "[+] Enabling services..."
 sudo systemctl unmask hostapd
 sudo systemctl enable hostapd
 sudo systemctl enable dnsmasq
+
+sudo systemctl restart hostapd
+sudo systemctl restart dnsmasq
 
 echo
 echo "================================="
