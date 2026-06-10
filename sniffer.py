@@ -75,6 +75,12 @@ def process_packet(pkt, detector):
     packet = extract_packet_info(pkt)
     if packet is None:
         return
+    
+    print(
+        f"{packet['src_ip']} -> {packet['dst_ip']} "
+        f"{packet['protocol']}:{packet['dst_port']} "
+        f"flags={packet['flags']}"
+    )
 
     packet = save_packet(packet)
     alert = detector.detect_packet(packet)
@@ -83,6 +89,7 @@ def process_packet(pkt, detector):
 
 
 def start_sniffer():
+    print("DEBUG: sniffer started")
     init_db()
     detector = Detector()
 
