@@ -95,13 +95,9 @@ EOF
 
 echo "[+] Enabling IPv4 forwarding..."
 
-sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+echo "net.ipv4.ip_forward=1" | sudo tee /etc/sysctl.d/99-pi-ids.conf > /dev/null
 
-if ! grep -q "net.ipv4.ip_forward=1" /etc/sysctl.conf; then
-    echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
-fi
-
-sudo sysctl -p
+sudo sysctl --system
 
 echo "[+] Checking Ethernet link..."
 
