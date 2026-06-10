@@ -1,0 +1,150 @@
+#!/bin/bash
+
+set -e
+
+echo "================================="
+echo " Raspberry Pi IDS AP Setup"
+echo "================================="
+
+AP_IFACE="wlan0"
+WAN_IFACE="eth0"
+AP_IP="192.168.50.1"
+AP_NETMASK="255.255.255.0"
+DHCP_START="192.168.50.10"
+DHCP_END="192.168.50.100"
+SSID="IDS-Network"
+
+read -p "Enter SSID: " INPUT_SSID
+
+if [ -n "$INPUT_SSID" ]; then
+    SSID="$INPUT_SSID"
+fi
+
+read -s -p "Enter WiFi password (minimum 8 characters): " PASSPHRASE
+echo
+
+if [ ${#PASSPHRASE} -lt 8 ]; then
+    echo "Error: WPA2 password must be at least 8 characters."
+    exit 1
+fi
+
+echo "[+] Updating packages..."
+sudo apt update
+
+echo "[+] Installing hostapd, dnsmasq and iptables-persistent..."
+sudo apt install -y hostapd dnsmasq iptables-persistent
+
+echo "[+] Stopping services..."
+sudo systemctl stop hostapd || true
+sudo systemctl stop dnsmasq || true
+
+echo "[+] Releasing wlan0 from Wi-Fi client mode..."
+sudo rfkill unblock wifi || true
+sudo ip link set wlan0 down || true
+sudo systemctl stop wpa_supplicant || true
+sudo systemctl stop NetworkManager || true
+sudo ip addr flush dev wlan0 || true
+sudo ip link set wlan0 up || true
+
+echo "[+] Configuring static IP..."
+
+sudo tee -a /etc/dhcpcd.conf > /dev/null <<EOF
+
+interface $AP_IFACE
+static ip_address=$AP_IP/24
+nohook wpa_supplicant
+EOF
+
+echo "[+] Configuring hostapd..."
+
+sudo tee /etc/hostapd/hostapd.conf > /dev/null <<EOF
+interface=$AP_IFACE
+driver=nl80211
+ssid=$SSID
+hw_mode=g
+channel=6
+wmm_enabled=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+
+wpa=2
+wpa_passphrase=$PASSPHRASE
+wpa_key_mgmt=WPA-PSK
+rsn_pairwise=CCMP
+EOF
+
+sudo sed -i 's|#DAEMON_CONF=""|DAEMON_CONF="/etc/hostapd/hostapd.conf"|' /etc/default/hostapd
+
+echo "[+] Configuring dnsmasq..."
+
+sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.backup 2>/dev/null || true
+
+sudo tee /etc/dnsmasq.conf > /dev/null <<EOF
+interface=$AP_IFACE
+dhcp-range=$DHCP_START,$DHCP_END,$AP_NETMASK,24h
+domain-needed
+bogus-priv
+EOF
+
+echo "[+] Enabling IPv4 forwarding..."
+
+sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+
+if ! grep -q "net.ipv4.ip_forward=1" /etc/sysctl.conf; then
+    echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
+fi
+
+sudo sysctl -p
+
+echo "[+] Checking Ethernet link..."
+
+if [ "$(cat /sys/class/net/eth0/carrier 2>/dev/null)" != "1" ]; then
+    echo "Error: No Ethernet link detected on eth0."
+    echo "Please connect the Pi to the router before running this script."
+    exit 1
+fi
+
+echo "[+] Checking internet connectivity..."
+
+if ! ping -I eth0 -c 1 8.8.8.8 >/dev/null 2>&1; then
+    echo "Error: eth0 does not have internet access."
+    echo "Check the Ethernet cable and router connection."
+    exit 1
+fi
+
+echo "[+] Configuring NAT..."
+
+sudo iptables -t nat -A POSTROUTING -o $WAN_IFACE -j MASQUERADE
+
+sudo iptables -A FORWARD \
+    -i $WAN_IFACE \
+    -o $AP_IFACE \
+    -m state \
+    --state RELATED,ESTABLISHED \
+    -j ACCEPT
+
+sudo iptables -A FORWARD \
+    -i $AP_IFACE \
+    -o $WAN_IFACE \
+    -j ACCEPT
+
+sudo netfilter-persistent save
+
+echo "[+] Enabling services..."
+
+sudo systemctl unmask hostapd
+sudo systemctl enable hostapd
+sudo systemctl enable dnsmasq
+
+echo
+echo "================================="
+echo " Setup Complete"
+echo "================================="
+echo "SSID: $SSID"
+echo "Gateway: $AP_IP"
+echo
+echo "Connect the Pi to your router via Ethernet."
+echo "Then reboot:"
+echo
+echo "sudo reboot"
