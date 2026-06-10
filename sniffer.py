@@ -92,8 +92,15 @@ def start_sniffer():
         except Exception as exc:
             logging.exception("Error processing packet: %s", exc)
 
-    logging.info("Starting packet capture on interface: %s", INTERFACE or "all")
-    sniff(iface=INTERFACE or None, prn=callback, store=False)
+    
+    interfaces = [i.strip() for i in INTERFACE.split(",")]
+    logging.info("Starting packet capture on interface: %s", interfaces or "all")
+
+    sniff(
+    iface=interfaces,
+    prn=callback,
+    store=False,
+    )
 
 
 if __name__ == "__main__":
