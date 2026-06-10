@@ -46,8 +46,10 @@ sudo systemctl stop NetworkManager || true
 sudo ip addr flush dev wlan0 || true
 sudo ip link set wlan0 up || true
 
-echo "[+] Configuring static IP..."
+sudo nmcli dev set $AP_IFACE managed no 2>/dev/null || true
 
+echo "[+] Configuring static IP..."
+sudo touch /etc/dhcpcd.conf
 sudo sed -i '/# BEGIN PI IDS AP CONFIG/,/# END PI IDS AP CONFIG/d' /etc/dhcpcd.conf
 
 sudo tee -a /etc/dhcpcd.conf > /dev/null <<EOF
@@ -58,6 +60,10 @@ static ip_address=$AP_IP/24
 nohook wpa_supplicant
 # END PI IDS AP CONFIG
 EOF
+
+sudo ip addr flush dev $AP_IFACE
+sudo ip addr add $AP_IP/24 dev $AP_IFACE
+sudo ip link set $AP_IFACE up
 
 echo "[+] Configuring hostapd..."
 
@@ -153,8 +159,13 @@ sudo systemctl unmask hostapd
 sudo systemctl enable hostapd
 sudo systemctl enable dnsmasq
 
-sudo systemctl restart hostapd
 sudo systemctl restart dnsmasq
+sudo systemctl restart hostapd
+
+if ! sudo iw dev | grep -q "type AP"; then
+    echo "ERROR: wlan0 failed to enter AP mode."
+    exit 1
+fi
 
 echo
 echo "================================="
@@ -163,7 +174,7 @@ echo "================================="
 echo "SSID: $SSID"
 echo "Gateway: $AP_IP"
 echo
-echo "Connect the Pi to your router via Ethernet."
-echo "Then reboot:"
+echo "The access point should now be active!!"
+echo "If it does not apear, reboot with:"
 echo
 echo "sudo reboot"
