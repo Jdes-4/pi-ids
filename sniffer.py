@@ -109,6 +109,7 @@ def start_sniffer():
     prn=callback,
     store=False,
     )
+    print(f"Interfaces: {interfaces}")
 
 
 if __name__ == "__main__":
