@@ -76,11 +76,12 @@ def process_packet(pkt, detector):
     if packet is None:
         return
     
-    print(
-        f"{packet['src_ip']} -> {packet['dst_ip']} "
-        f"{packet['protocol']}:{packet['dst_port']} "
-        f"flags={packet['flags']}"
-    )
+    if packet ["src_ip"] == "192.168.1.92":
+        print(
+            f"{packet['src_ip']} -> {packet['dst_ip']} "
+            f"{packet['protocol']}:{packet['dst_port']} "
+            f"flags={packet['flags']}"
+        )
 
     packet = save_packet(packet)
     alert = detector.detect_packet(packet)
