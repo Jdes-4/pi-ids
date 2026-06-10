@@ -83,7 +83,7 @@ class Detector:
         if proto == "ICMP" and packet_size > 1500:
             reasons.append("Large ICMP packet")
 
-        if proto == "TCP" and flags == "S" and src_ip and dst_ip:
+        if proto == "TCP" and flags in ("S","SA") and src_ip and dst_ip:
             window = time.time() - 60
             row = self.conn.execute(
                 """
