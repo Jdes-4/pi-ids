@@ -26,11 +26,15 @@ sudo apt install -y nginx openssl
 echo "[+] Creating SSL directory..."
 sudo mkdir -p "$SSL_DIR"
 
-echo "[+] Generating self-signed TLS certificate..."
-sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout "$SSL_DIR/ids.key" \
-    -out "$SSL_DIR/ids.crt" \
-    -subj "/CN=$DOMAIN_NAME"
+if [ ! -f "$SSL_DIR/ids.crt" ] || [ ! -f "$SSL_DIR/ids.key" ]; then
+    echo "[+] Generating self-signed TLS certificate..."
+    sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout "$SSL_DIR/ids.key" \
+        -out "$SSL_DIR/ids.crt" \
+        -subj "/CN=$DOMAIN_NAME"
+else
+    echo "[+] Existing certificate found, skipping generation."
+fi
 
 echo "[+] Creating Nginx reverse proxy config..."
 sudo tee "$NGINX_AVAILABLE" > /dev/null <<EOF
