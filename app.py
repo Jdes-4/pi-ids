@@ -3,12 +3,17 @@ import time
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, g
 from database import init_db, get_db_connection
-from config import SECRET_KEY, ADMIN_USER, ADMIN_PASSWORD
+from config import SECRET_KEY, ADMIN_USER, ADMIN_PASSWORD_HASH
 from sniffer import start_sniffer
+from werkzeug.security import check_password_hash
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = SECRET_KEY
 sniffer_thread = None
+
+app.config["SESSION_COOKIE_SECURE"] =True
+app.config["SESSION_COOKIE_HTTPONLY"]=True
+app.config["SESSION_COOKIE_SAMESITE"]="Lax"
 
 init_db() 
 def get_db():
@@ -48,7 +53,14 @@ def login():
     if request.method == "POST":
         username = request.form.get("username", "")
         password = request.form.get("password", "")
-        if username == ADMIN_USER and password == ADMIN_PASSWORD:
+        if (
+            username == ADMIN_USER
+            and check_password_hash(
+                ADMIN_PASSWORD_HASH,
+                password
+            )
+            
+        ):
             session["authenticated"] = True
             return redirect(url_for("dashboard"))
         error = "Invalid credentials"
