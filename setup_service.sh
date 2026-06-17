@@ -86,10 +86,10 @@ RestartSec=5
 
 User=root
 
-Environment=IDS_ADMIN_USER=$ADMIN_USER
-Environment=IDS_ADMIN_PASSWORD_HASH=$ADMIN_PASSWORD_HASH
-Environment=IDS_SECRET_KEY=$SECRET_KEY
-Environment=IDS_INTERFACE=wlan0
+Environment="IDS_ADMIN_USER=$ADMIN_USER"
+Environment="IDS_ADMIN_PASSWORD_HASH=$ADMIN_PASSWORD_HASH"
+Environment="IDS_SECRET_KEY=$SECRET_KEY"
+Environment="IDS_INTERFACE=wlan0"
 
 [Install]
 WantedBy=multi-user.target
