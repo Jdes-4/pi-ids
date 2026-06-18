@@ -58,9 +58,14 @@ setup_inputs() {
 }
 
 install_packages() {
-    echo "[+] Installing required packages..."
+    echo "[+] Installing required packages...(This may take a few minutes!)"
+    export DEBIAN_FRONTEND=noninteractive
+
+    echo iptables-persistent iptables-persistent/autosave_v4 boolean true | debconf-set-selections
+    echo iptables-persistent iptables-persistent/autosave_v6 boolean true | debconf-set-selections
     run_quiet apt update
     run_quiet apt install -y hostapd dnsmasq iptables-persistent nginx openssl python3-venv
+    echo "[+] Package installation complete."
 }
 
 setup_python_env() {
