@@ -105,12 +105,26 @@ setup_ap() {
     systemctl stop wpa_supplicant 2>/dev/null || true
     systemctl disable wpa_supplicant 2>/dev/null || true
 
+    echo "[+] Removing existing Wi-Fi client profiles..."
+
+    nmcli -t -f NAME,TYPE connection show | while IFS=: read -r NAME TYPE; do
+    if [ "$TYPE" = "wifi" ]; then
+        nmcli connection delete "$NAME" >/dev/null 2>&1 || true
+    fi
+    done
+
     echo "[+] Preparing wireless interface..."
+
+    systemctl disable wpa_supplicant 2>/dev/null || true
+        systemctl stop wpa_supplicant 2>/dev/null || true
+
+            nmcli dev disconnect "$AP_IFACE" >/dev/null 2>&1 || true
+    nmcli dev set "$AP_IFACE" managed no >/dev/null 2>&1 || true
+
     rfkill unblock wifi 2>/dev/null || true
     ip link set "$AP_IFACE" down 2>/dev/null || true
     ip addr flush dev "$AP_IFACE" 2>/dev/null || true
     ip link set "$AP_IFACE" up 2>/dev/null || true
-    nmcli dev set "$AP_IFACE" managed no 2>/dev/null || true
 
     echo "[+] Configuring static AP IP..."
     touch /etc/dhcpcd.conf
@@ -118,11 +132,11 @@ setup_ap() {
 
     tee -a /etc/dhcpcd.conf > /dev/null <<EOF
 
-# BEGIN PI IDS AP CONFIG
-interface $AP_IFACE
-static ip_address=$AP_IP/24
-nohook wpa_supplicant
-# END PI IDS AP CONFIG
+    # BEGIN PI IDS AP CONFIG
+    interface $AP_IFACE
+    static ip_address=$AP_IP/24
+    nohook wpa_supplicant
+        # END PI IDS AP CONFIG
 EOF
 
     ip addr flush dev "$AP_IFACE"
@@ -131,20 +145,20 @@ EOF
 
     echo "[+] Writing hostapd configuration..."
     tee /etc/hostapd/hostapd.conf > /dev/null <<EOF
-interface=$AP_IFACE
-driver=nl80211
-ssid=$SSID
-hw_mode=g
-channel=6
-wmm_enabled=0
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
+    interface=$AP_IFACE
+    driver=nl80211
+    ssid=$SSID
+    hw_mode=g
+    channel=6
+    wmm_enabled=0
+    macaddr_acl=0
+    auth_algs=1
+    ignore_broadcast_ssid=0
 
-wpa=2
-wpa_passphrase=$PASSPHRASE
-wpa_key_mgmt=WPA-PSK
-rsn_pairwise=CCMP
+    wpa=2
+    wpa_passphrase=$PASSPHRASE
+    wpa_key_mgmt=WPA-PSK
+    rsn_pairwise=CCMP
 EOF
 
     sed -i 's|#DAEMON_CONF=""|DAEMON_CONF="/etc/hostapd/hostapd.conf"|' /etc/default/hostapd
@@ -156,10 +170,10 @@ EOF
     fi
 
     tee /etc/dnsmasq.conf > /dev/null <<EOF
-interface=$AP_IFACE
-dhcp-range=$DHCP_START,$DHCP_END,$AP_NETMASK,24h
-domain-needed
-bogus-priv
+    interface=$AP_IFACE
+    dhcp-range=$DHCP_START,$DHCP_END,$AP_NETMASK,24h
+    domain-needed
+    bogus-priv
 EOF
 
     echo "[+] Enabling IPv4 forwarding..."
@@ -210,19 +224,19 @@ setup_https() {
 
     echo "[+] Writing Nginx reverse proxy configuration..."
     tee "$NGINX_AVAILABLE" > /dev/null <<EOF
-server {
-    listen 80;
-    server_name _;
+    server {
+        listen 80;
+        server_name _;
 
-    return 301 https://\$host\$request_uri;
-}
+        return 301 https://\$host\$request_uri;
+    }
 
-server {
-    listen 443 ssl;
-    server_name _;
+    server {
+        listen 443 ssl;
+        server_name _;
 
-    ssl_certificate $SSL_DIR/ids.crt;
-    ssl_certificate_key $SSL_DIR/ids.key;
+        ssl_certificate $SSL_DIR/ids.crt;
+        ssl_certificate_key $SSL_DIR/ids.key;
 
     location / {
         proxy_pass http://127.0.0.1:$APP_PORT;
