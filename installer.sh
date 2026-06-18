@@ -350,22 +350,20 @@ main() {
     setup_https
     setup_service
 
+    ETH_IP=$(ip -4 addr show eth0 | awk '/inet / {print $2}' | cut -d/ -f1)
     echo
     echo "================================="
     echo " Installation Complete"
     echo "================================="
     echo "AP SSID: $SSID"
     echo "AP Gateway: $AP_IP"
-    echo "Dashboard:"
-    echo "  https://$AP_IP"
-    echo "  https://<eth0-ip-address>"
+    echo "Dashboard address:"
+    if [ -n "$ETH_IP" ]; then
+    echo "  https://$ETH_IP"
+    fi
     echo
     echo "Browser warning is expected because the dashboard uses a self-signed certificate."
     echo
-    echo "Useful commands:"
-    echo "  sudo systemctl status pi-ids"
-    echo "  sudo systemctl restart pi-ids"
-    echo "  sudo journalctl -u pi-ids -f"
     echo
     echo "A reboot is recommended:"
     echo "  sudo reboot"
