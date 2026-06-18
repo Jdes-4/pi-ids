@@ -2,7 +2,7 @@
 
 set -e
 
-PROJECT_DIR="/home/ids/pi-ids"
+PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SERVICE_NAME="pi-ids"
 SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME.service"
 ENV_DIR="/etc/pi-ids"
