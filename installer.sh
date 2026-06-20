@@ -2,6 +2,7 @@
 
 set -e
 
+WIFI_PREP_SERVICE="/etc/systemd/system/pi-ids-wifi-prepare.service"
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SERVICE_NAME="pi-ids"
 SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME.service"
@@ -126,19 +127,32 @@ setup_ap() {
     ip addr flush dev "$AP_IFACE" 2>/dev/null || true
     ip link set "$AP_IFACE" up 2>/dev/null || true
 
-    echo "[+] Configuring static AP IP..."
-    touch /etc/dhcpcd.conf
-    sed -i '/# BEGIN PI IDS AP CONFIG/,/# END PI IDS AP CONFIG/d' /etc/dhcpcd.conf
+    echo "[+] Creating WiFi prepare service..."
 
-    tee -a /etc/dhcpcd.conf > /dev/null <<EOF
+    tee "$WIFI_PREP_SERVICE" > /dev/null <<EOF
+[Unit]
+Description=Prepare wlan0 for Pi IDS Access Point
+Before=hostapd.service dnsmasq.service
+After=network.target
 
-# BEGIN PI IDS AP CONFIG
-interface $AP_IFACE
-static ip_address=$AP_IP/24
-nohook wpa_supplicant
-# END PI IDS AP CONFIG
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/rfkill unblock wifi
+ExecStart=/usr/sbin/ip link set $AP_IFACE down
+ExecStart=/usr/sbin/ip addr flush dev $AP_IFACE
+ExecStart=/usr/sbin/ip addr add $AP_IP/24 dev $AP_IFACE
+ExecStart=/usr/sbin/ip link set $AP_IFACE up
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
 EOF
 
+    echo "[+] Enabling WiFi prepare service..."
+    systemctl daemon-reload
+    systemctl enable pi-ids-wifi-prepare
+    systemctl restart pi-ids-wifi-prepare
+    
     ip addr flush dev "$AP_IFACE"
     ip addr add "$AP_IP/24" dev "$AP_IFACE"
     ip link set "$AP_IFACE" up
