@@ -15,13 +15,17 @@
       </div>
 
       <nav class="actions" aria-label="Dashboard actions">
-        <a
-          class="button secondary"
-          href="/reset"
-          aria-label="Reset dashboard data"
-        >
-          Reset
-        </a>
+        <form action="/rest" method="post">
+           <input type="hidden" name="csrf_token" value="{{ crsf_token() }}">
+           <button
+            class="button secondary"
+            type="submit"
+            aria-label="Rest dashboard data"
+           >
+             Reset
+           </button> 
+        </form>
+
         <a class="button secondary" href="/logout">Logout</a>
       </nav>
     </header>
@@ -136,9 +140,9 @@
           </div>
 
           <button
+            id="close-incident"
             class="button secondary"
             type="button"
-            onclick="closeIncident()"
           >
             Close
           </button>

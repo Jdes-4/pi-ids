@@ -6,11 +6,13 @@ from database import init_db, get_db_connection
 from config import SECRET_KEY, ADMIN_USER, ADMIN_PASSWORD_HASH
 from sniffer import start_sniffer
 from werkzeug.security import check_password_hash
+from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = SECRET_KEY
 sniffer_thread = None
 
+csrf = CSRFProtect(app)
 app.config["SESSION_COOKIE_SECURE"] =True
 app.config["SESSION_COOKIE_HTTPONLY"]=True
 app.config["SESSION_COOKIE_SAMESITE"]="Lax"
@@ -78,14 +80,13 @@ def logout():
 def dashboard():
     return render_template("index.html")
 
-@app.route("/reset")
+@app.route("/reset", methods=["POST"])
 @login_required
 def reset():
     conn = get_db()
 
     conn.execute("DELETE FROM packets")
     conn.execute("DELETE FROM alerts")
-
     conn.execute("DELETE FROM sqlite_sequence WHERE name='packets';")
     conn.execute("DELETE FROM sqlite_sequence WHERE name='alerts';")
     conn.commit()
