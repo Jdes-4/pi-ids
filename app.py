@@ -23,6 +23,17 @@ def get_db():
         g.db = get_db_connection()
     return g.db
 
+@app.after_request
+def add_cache_headers(response):
+    if response.content_type and (
+        response.content_type.startswith("text/html")
+        or response.content_type.startswith("application/json")
+    ):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+
+    return response
 
 @app.teardown_appcontext
 def close_db(exception=None):
