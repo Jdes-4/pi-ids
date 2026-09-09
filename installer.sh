@@ -252,6 +252,11 @@ server {
     ssl_certificate $SSL_DIR/ids.crt;
     ssl_certificate_key $SSL_DIR/ids.key;
 
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
     location / {
         proxy_pass http://127.0.0.1:$APP_PORT;
         proxy_set_header Host \$host;
