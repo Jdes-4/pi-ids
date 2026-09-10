@@ -214,9 +214,14 @@ async function fetchAlerts() {
 
 document.addEventListener('DOMContentLoaded', () => {
   const toggleButton = document.getElementById('toggle-details');
+  const closeButton = document.getElementById('close-incident');
 
   if (toggleButton) {
     toggleButton.addEventListener('click', toggleTechnicalDetails);
+  }
+
+  if (closeButton) {
+    closeButton.addEventListener('click', closeIncident);
   }
 
   refresh();
