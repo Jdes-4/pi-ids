@@ -141,7 +141,10 @@ function showIncident(alert) {
   } else if (alert.reason.includes('Large ICMP')) {
     explanation =
       'An unusually large ICMP packet was detected, which may indicate abnormal network probing.';
-  }
+  } else if (alert.reason.includes('Traffic to reserved port 0')) {
+    explanation =
+    'Traffic was detected attempting to communicate using reserved port 0. This is unusual and may warrant further investigation.';
+}
 
   document.getElementById('incident-explanation').textContent = explanation;
   document.getElementById('incident-time').textContent = alert.timestamp;
