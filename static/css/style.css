@@ -182,6 +182,13 @@ thead th {
 }
 
 .actions form {
-  display: inline-flex;
+  display: flex;
+  align-items: center;
   margin: 0;
+}
+
+.actions button,
+.actions .button {
+  width: auto;
+  margin-top: 0;
 }
