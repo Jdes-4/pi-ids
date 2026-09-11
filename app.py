@@ -182,6 +182,9 @@ def api_alerts():
         elif "Large ICMP" in reasons:
             main_reason = "Large ICMP packet detected"
             severity = "medium"
+        elif "Traffic to reserved port 0" in reasons:
+            main_reason = "Traffic to reserved port 0"
+            severity = "medium"
         else:
             main_reason = "Suspicious network activity"
             severity = "medium"
