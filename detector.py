@@ -53,8 +53,7 @@ class Detector:
         if src_ip in BLACKLISTED_IPS or dst_ip in BLACKLISTED_IPS:
             reasons.append("Traffic involves a blacklisted IP")
 
-        if packet_size == 0:
-            reasons.append("Zero-length packet")
+    
 
         if proto == "TCP" and flags == "S" and src_ip and dst_ip and dst_port is not None:
             window = time.time() - 10
